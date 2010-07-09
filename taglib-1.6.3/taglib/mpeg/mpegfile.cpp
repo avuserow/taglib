@@ -120,7 +120,40 @@ MPEG::File::~File()
 
 TagLib::Tag *MPEG::File::tag() const
 {
-  return &d->tag;
+	ID3v2::Tag *id3v2tag = d->tag.access<ID3v2::Tag>(ID3v2Index, true);
+	ID3v1::Tag *id3v1tag = d->tag.access<ID3v1::Tag>(ID3v1Index, false);
+	APE::Tag *apetag = d->tag.access<APE::Tag>(APEIndex, false);
+	
+	if (id3v2tag->title().isNull() &&
+			   id3v2tag->artist().isNull() &&
+			   id3v2tag->album().isNull() &&
+			   id3v2tag->genre().isNull() &&
+			   id3v2tag->lyrics().isNull() &&
+			   id3v2tag->year() == 0 &&
+			   id3v2tag->track() == 0) { //check if id3v2 header is empty
+		if (id3v1tag) {
+			id3v2tag->setTitle(id3v1tag->title());
+			id3v2tag->setArtist(id3v1tag->artist());
+			id3v2tag->setAlbum(id3v1tag->album());
+			id3v2tag->setGenre(id3v1tag->genre());
+			id3v2tag->setLyrics(id3v1tag->lyrics());
+			id3v2tag->setYear(id3v1tag->year());
+			id3v2tag->setTrack(id3v1tag->track());
+			
+			id3v2tag->header()->setMajorVersion(0);
+		} else if (apetag) {
+			id3v2tag->setTitle(apetag->title());
+			id3v2tag->setArtist(apetag->artist());
+			id3v2tag->setAlbum(apetag->album());
+			id3v2tag->setGenre(apetag->genre());
+			id3v2tag->setLyrics(apetag->lyrics());
+			id3v2tag->setYear(apetag->year());
+			id3v2tag->setTrack(apetag->track());
+			
+			id3v2tag->header()->setMajorVersion(1);
+		}
+	}	
+	return id3v2tag;
 }
 
 MPEG::Properties *MPEG::File::audioProperties() const
@@ -159,11 +192,13 @@ bool MPEG::File::save(int tags, bool stripOthers)
   // Create the tags if we've been asked to.  Copy the values from the tag that
   // does exist into the new tag.
 
-  if((tags & ID3v2) && ID3v1Tag())
-    Tag::duplicate(ID3v1Tag(), ID3v2Tag(true), false);
-
+  //we do not need to create new ID3v2 tag and copy v1 tags in it
+  //we use only v2 tags
+  //if((tags & ID3v2) && ID3v1Tag())
+  //Tag::duplicate(ID3v1Tag(), ID3v2Tag(true), false);
+	
   if((tags & ID3v1) && d->tag[ID3v2Index])
-    Tag::duplicate(ID3v2Tag(), ID3v1Tag(true), false);
+	Tag::duplicate(ID3v2Tag(), ID3v1Tag(), true);
 
   bool success = true;
 

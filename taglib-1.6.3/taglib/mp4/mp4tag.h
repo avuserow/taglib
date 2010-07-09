@@ -53,16 +53,39 @@ namespace TagLib {
         String album() const;
         String comment() const;
         String genre() const;
+        String lyrics() const;
         uint year() const;
         uint track() const;
+		
+		String albumArtist() const;
+		String grouping() const;
+		String composer() const;
+		uint totalTracks() const;
+		uint cdNr() const;
+		uint totalCDs() const;
+		uint bpm() const;
+		bool compilation() const;
+		bool podcast() const;
+		bool itunesu() const;
 
         void setTitle(const String &value);
         void setArtist(const String &value);
         void setAlbum(const String &value);
         void setComment(const String &value);
         void setGenre(const String &value);
+        int  setLyrics(const String &value);
         void setYear(uint value);
         void setTrack(uint value);
+		
+		int setAlbumArtist(const String &s);
+		int setGrouping(const String &s);
+		int setComposer(const String &s);
+		int setTotalTracks(uint i);
+		int setCDNr(uint i);
+		int setTotalCDs(uint i);
+		int setBPM(uint i);
+		int setCompilation(bool compilation);
+		
 
         ItemListMap &itemListMap();
 

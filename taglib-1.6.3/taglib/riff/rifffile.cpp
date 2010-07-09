@@ -184,6 +184,10 @@ void RIFF::File::read()
     long uPosNotPadded = tell();
     if((uPosNotPadded & 0x01) != 0) {
       ByteVector iByte = readBlock(1);
+	  if (iByte[0] == '\0') {
+		//file is corrupt
+		break;
+	  }
       if((iByte.size() != 1) || (iByte[0] != 0)) {
         // not well formed, re-seek
         seek(uPosNotPadded, Beginning);

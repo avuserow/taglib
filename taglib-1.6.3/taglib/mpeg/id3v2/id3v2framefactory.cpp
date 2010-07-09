@@ -299,10 +299,12 @@ bool FrameFactory::updateFrame(Frame::Header *header) const
     convertFrame("CRA", "AENC", header);
     convertFrame("ETC", "ETCO", header);
     convertFrame("GEO", "GEOB", header);
-    convertFrame("IPL", "TIPL", header);
+	convertFrame("IPL", "TIPL", header);
+	convertFrame("ITU", "ITNU", header);
     convertFrame("MCI", "MCDI", header);
     convertFrame("MLL", "MLLT", header);
-    convertFrame("POP", "POPM", header);
+	convertFrame("PCS", "PCST", header);
+	convertFrame("POP", "POPM", header);
     convertFrame("REV", "RVRB", header);
     convertFrame("SLT", "SYLT", header);
     convertFrame("STC", "SYTC", header);
@@ -310,6 +312,7 @@ bool FrameFactory::updateFrame(Frame::Header *header) const
     convertFrame("TBP", "TBPM", header);
     convertFrame("TCM", "TCOM", header);
     convertFrame("TCO", "TCON", header);
+	convertFrame("TCP", "TCMP", header);
     convertFrame("TCR", "TCOP", header);
     convertFrame("TDY", "TDLY", header);
     convertFrame("TEN", "TENC", header);
@@ -348,8 +351,8 @@ bool FrameFactory::updateFrame(Frame::Header *header) const
     convertFrame("WCP", "WCOP", header);
     convertFrame("WPB", "WPUB", header);
     convertFrame("WXX", "WXXX", header);
-
-    break;
+	
+	break;
   }
 
   case 3: // ID3v2.3

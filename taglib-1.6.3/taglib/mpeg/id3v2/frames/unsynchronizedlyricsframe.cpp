@@ -142,7 +142,7 @@ ByteVector UnsynchronizedLyricsFrame::renderFields() const
   ByteVector v;
 
   v.append(char(d->textEncoding));
-  v.append(d->language.size() == 3 ? d->language : "XXX");
+  v.append(d->language.size() == 3 ? d->language : "eng"); //default language is eng
   v.append(d->description.data(d->textEncoding));
   v.append(textDelimiter(d->textEncoding));
   v.append(d->text.data(d->textEncoding));

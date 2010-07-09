@@ -139,16 +139,39 @@ namespace TagLib {
       virtual String album() const;
       virtual String comment() const;
       virtual String genre() const;
+      virtual String lyrics() const;
       virtual uint year() const;
       virtual uint track() const;
-
+		
+	  virtual String albumArtist() const;
+	  virtual String grouping() const;
+	  virtual String composer() const;
+	  virtual uint totalTracks() const;
+	  virtual uint cdNr() const;
+	  virtual uint totalCDs() const;
+	  virtual uint bpm() const;
+	  virtual bool compilation() const;
+	  virtual bool podcast() const;
+	  virtual bool itunesu() const;
+		
+		
       virtual void setTitle(const String &s);
       virtual void setArtist(const String &s);
       virtual void setAlbum(const String &s);
       virtual void setComment(const String &s);
       virtual void setGenre(const String &s);
+      virtual int  setLyrics(const String &s);
       virtual void setYear(uint i);
       virtual void setTrack(uint i);
+		
+	  virtual int setAlbumArtist(const String &s);
+	  virtual int setGrouping(const String &s);
+	  virtual int setComposer(const String &s);
+	  virtual int setTotalTracks(uint i);
+	  virtual int setCDNr(uint i);
+	  virtual int setTotalCDs(uint i);
+	  virtual int setBPM(uint i);
+	  virtual int setCompilation(bool compilation);
 
       virtual bool isEmpty() const;
 

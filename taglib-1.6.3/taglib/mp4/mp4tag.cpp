@@ -211,7 +211,20 @@ MP4::Tag::parseCovr(MP4::Atom *atom, TagLib::File *file)
       debug("MP4: Unexpected atom \"" + name + "\", expecting \"data\"");
       break;
     }
-    if(flags == MP4::CoverArt::PNG || flags == MP4::CoverArt::JPEG) {
+	if (flags == 0) { //detect cover format when the cover format bytes are not set
+		ByteVector picHeader = data.mid(pos+16,9);
+		const char jpeg[] = {0xff, 0xd8, 0xff, 0xe0 };
+		const char jfif[] = {0x10, 0x4a, 0x46, 0x49, 0x46 };
+		const char png[] = {0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00 };
+		if ((memcmp(picHeader.data(), png, 9) == 0)) {
+			flags = MP4::CoverArt::PNG;
+		} else if ((memcmp(picHeader.data(), jpeg, 4) == 0)) {
+			flags = MP4::CoverArt::JPEG;
+		} else if ((memcmp(picHeader.data(), jfif, 5) == 0)) {
+			flags = MP4::CoverArt::JPEG;
+		}
+	}
+    if(flags == MP4::CoverArt::PNG || flags == MP4::CoverArt::JPEG || flags == 0) {
       value.append(MP4::CoverArt(MP4::CoverArt::Format(flags),
                                  data.mid(pos + 16, length - 16)));
     }
@@ -339,7 +352,7 @@ MP4::Tag::save()
     else if(name == "disk") {
       data.append(renderIntPairNoTrailing(name.data(String::Latin1), i->second));
     }
-    else if(name == "cpil" || name == "pgap" || name == "pcst") {
+    else if(name == "cpil" || name == "pgap" || name == "pcst" || name == "itnu") {
       data.append(renderBool(name.data(String::Latin1), i->second));
     }
     else if(name == "tmpo") {
@@ -529,6 +542,8 @@ MP4::Tag::saveExisting(ByteVector &data, AtomList &path)
   }
 }
 
+#pragma mark -
+
 String
 MP4::Tag::title() const
 {
@@ -569,6 +584,14 @@ MP4::Tag::genre() const
   return String::null;
 }
 
+String
+MP4::Tag::lyrics() const
+{
+  if(d->items.contains("\251lyr"))
+    return d->items["\251lyr"].toStringList().toString(", ");
+  return String::null;
+}
+
 unsigned int
 MP4::Tag::year() const
 {
@@ -584,6 +607,85 @@ MP4::Tag::track() const
     return d->items["trkn"].toIntPair().first;
   return 0;
 }
+
+String 
+MP4::Tag::albumArtist() const
+{
+	if(d->items.contains("aART"))
+		return d->items["aART"].toStringList().toString(", ");
+	return String::null;
+}
+String  
+MP4::Tag::grouping() const
+{
+	if(d->items.contains("\251grp"))
+		return d->items["\251grp"].toStringList().toString(", ");
+	return String::null;
+}
+String  
+MP4::Tag::composer() const
+{
+	if(d->items.contains("\251wrt"))
+		return d->items["\251wrt"].toStringList().toString(", ");
+	return String::null;
+}
+uint  
+MP4::Tag::totalTracks() const
+{
+	if(d->items.contains("trkn"))
+		return d->items["trkn"].toIntPair().second;
+	return 0;
+}
+uint  
+MP4::Tag::cdNr() const
+{
+	if(d->items.contains("disk"))
+		return d->items["disk"].toIntPair().first;
+	return 0;
+}
+uint  
+MP4::Tag::totalCDs() const
+{
+	if(d->items.contains("disk"))
+		return d->items["disk"].toIntPair().second;
+	return 0;	
+}
+uint  
+MP4::Tag::bpm() const
+{
+	if(d->items.contains("tmpo"))
+		return d->items["tmpo"].toInt();
+	return 0;
+}
+
+bool
+MP4::Tag::compilation() const
+{
+	if (d->items.contains("cpil")) {
+		return d->items["cpil"].toStringList().toString().toInt();
+	}
+	return 0;
+}
+
+bool 
+MP4::Tag::podcast() const
+{
+	if (d->items.contains("pcst")) {
+		return 1;
+	}
+	return 0;
+}
+
+bool 
+MP4::Tag::itunesu() const
+{
+	if (d->items.contains("itnu")) {
+		return 1;
+	}
+	return 0;
+}
+
+#pragma mark -
 
 void
 MP4::Tag::setTitle(const String &value)
@@ -615,6 +717,13 @@ MP4::Tag::setGenre(const String &value)
   d->items["\251gen"] = StringList(value);
 }
 
+int
+MP4::Tag::setLyrics(const String &value)
+{
+  d->items["\251lyr"] = StringList(value);
+  return 0;
+}
+
 void
 MP4::Tag::setYear(uint value)
 {
@@ -626,6 +735,63 @@ MP4::Tag::setTrack(uint value)
 {
   d->items["trkn"] = MP4::Item(value, 0);
 }
+
+int
+MP4::Tag::setAlbumArtist(const String &value)
+{
+	d->items["aART"] = StringList(value);
+	return 0;
+}
+int 
+MP4::Tag::setGrouping(const String &value)
+{
+	d->items["\251grp"] = StringList(value);
+	return 0;
+}
+
+int 
+MP4::Tag::setComposer(const String &value)
+{
+	d->items["\251wrt"] = StringList(value);
+	return 0;
+}
+
+int 
+MP4::Tag::setTotalTracks(uint value)
+{
+	d->items["trkn"] = MP4::Item(0, value);
+	return 0;
+}
+
+int 
+MP4::Tag::setCDNr(uint value){
+	d->items["disk"] = MP4::Item(value, 0);
+	return 0;
+}
+
+int 
+MP4::Tag::setTotalCDs(uint value)
+{
+	d->items["trkn"] = MP4::Item(0, value);
+	return 0;
+}
+
+int 
+MP4::Tag::setBPM(uint value)
+{
+	d->items["tmpo"] = MP4::Item((int)value);
+	return 0;
+}
+
+int
+MP4::Tag::setCompilation(bool compilation)
+{
+	d->items["cpil"] = StringList(String::number(compilation));
+	return 0;
+}
+
+
+#pragma mark -
 
 MP4::ItemListMap &
 MP4::Tag::itemListMap()

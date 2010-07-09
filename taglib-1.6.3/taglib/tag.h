@@ -62,6 +62,12 @@ namespace TagLib {
      */
     virtual String artist() const = 0;
 
+	/*!
+	 * Returns the album artist name; if no album artist name is present in the 
+	 * tag String::null will be returned.
+	 */
+	virtual String albumArtist() const;
+	  
     /*!
      * Returns the album name; if no album name is present in the tag
      * String::null will be returned.
@@ -73,13 +79,31 @@ namespace TagLib {
      * String::null will be returned.
      */
     virtual String comment() const = 0;
-
+	  
     /*!
+     * Returns the track grouping; if no grouping is present in the tag
+     * String::null will be returned.
+     */
+    virtual String grouping() const;
+    
+	/*!
      * Returns the genre name; if no genre is present in the tag String::null
      * will be returned.
      */
     virtual String genre() const = 0;
+	  
+	/*!
+	 * Returns the composer name; if no composer is present in the tag String::null
+	 * will be returned.
+	 */
+	virtual String composer() const;
 
+	/*!
+	 * Returns the genre lyrics; if no lyrics is present in the tag String::null
+	 * will be returned.
+	 */
+    virtual String lyrics() const;
+	  
     /*!
      * Returns the year; if there is no year set, this will return 0.
      */
@@ -90,7 +114,48 @@ namespace TagLib {
      * return 0.
      */
     virtual uint track() const = 0;
+	  
+    /*!
+	 * Returns the track number; if there is no track number set, this will
+	 * return 0.
+	 */
+	virtual uint totalTracks() const;
 
+	/*!
+	 * Returns the cd number; if there is no cd number set, this will
+	 * return 0.
+	 */
+	virtual uint cdNr() const;
+	
+	/*!
+	 * Returns the total cds; if there is no total cds set, this will
+	 * return 0.
+	 */
+	virtual uint totalCDs() const;
+	  
+	/*!
+	 * Returns the BPM; if there is no BPM set, this will
+	 * return 0.
+	 */
+	virtual uint bpm() const;
+	  
+	/*!
+	 * Returns true if the track is part of a compilation
+	 */
+	virtual bool compilation() const;
+	  
+	/*!
+	 * Returns true if the podcast flag ist set otherwise false
+	 */
+	virtual bool podcast() const;
+	
+	/*! 
+	 * Returnes true if the podcast flag is set otherwise false
+	 */
+    virtual bool itunesu() const;
+	  
+	  
+	  
     /*!
      * Sets the title to \a s.  If \a s is String::null then this value will be
      * cleared.
@@ -108,6 +173,12 @@ namespace TagLib {
      * cleared.
      */
     virtual void setAlbum(const String &s) = 0;
+	  
+	/*!
+	 * Sets the album artist to \a s.  If \a s is String::null then this value 
+	 * will be cleared.
+	 */
+	virtual int setAlbumArtist(const String &s);
 
     /*!
      * Sets the comment to \a s.  If \a s is String::null then this value will be
@@ -123,7 +194,24 @@ namespace TagLib {
      * implementation.
      */
     virtual void setGenre(const String &s) = 0;
-
+	  
+	/*!
+	 * Sets the grouping to \a s.
+	 */
+	virtual int setGrouping(const String &s);
+	  
+	/*!
+	 * Sets the composer to \a s.
+	 */
+	virtual int setComposer(const String &s);
+	  
+	/*!
+	 * Sets the lyrics to \a s. If \a s is String::null then this value will be
+	 * cleared. If no lyric could be set -1 is returned. If lyrics could be set 
+	 * 0 is returned.
+	 */
+	virtual int setLyrics(const String &s);
+	  
     /*!
      * Sets the year to \a i.  If \a s is 0 then this value will be cleared.
      */
@@ -133,7 +221,38 @@ namespace TagLib {
      * Sets the track to \a i.  If \a s is 0 then this value will be cleared.
      */
     virtual void setTrack(uint i) = 0;
+	  
+	/*!
+	 * Stes the nuber of tracks to \a i. If \a s is 0 then this value will be 
+	 * cleared.
+	 */
+    virtual int setTotalTracks(uint i);
 
+	 
+	/*!
+	 * Sets the cd nr to \a i.  If \a s is 0 then this value will be cleared.
+	 */
+	virtual int setCDNr(uint i);
+	
+	/*!
+	 * Stes the number of cds to \a i. If \a s is 0 then this value will be 
+	 * cleared.
+	 */
+	virtual int setTotalCDs(uint i);
+	  
+	/*!
+	 * Stes the BPM to \a i. If \a s is 0 then this value will be 
+	 * cleared.
+	 */
+	virtual int setBPM(uint i);
+	  
+	  
+	/*!
+	 * Stes the BPM to \a i. If \a s is 0 then this value will be 
+	 * cleared.
+	 */
+	virtual int setCompilation(bool compilation);
+	  
     /*!
      * Returns true if the tag does not contain any data.  This should be
      * reimplemented in subclasses that provide more than the basic tagging

@@ -101,6 +101,8 @@ void TagUnion::set(int index, Tag *tag)
   d->tags[index] = tag;
 }
 
+#pragma mark -
+
 String TagUnion::title() const
 {
   stringUnion(title);
@@ -126,6 +128,11 @@ String TagUnion::genre() const
   stringUnion(genre);
 }
 
+String TagUnion::lyrics() const
+{
+	stringUnion(lyrics);
+}
+
 TagLib::uint TagUnion::year() const
 {
   numberUnion(year);
@@ -135,6 +142,47 @@ TagLib::uint TagUnion::track() const
 {
   numberUnion(track);
 }
+
+String TagUnion::albumArtist() const
+{
+	stringUnion(albumArtist);
+}
+
+String TagUnion::grouping() const
+{
+	stringUnion(grouping);
+}
+
+String 
+TagUnion::composer() const
+{
+	stringUnion(composer);
+}
+
+uint TagUnion::totalTracks() const
+{
+	numberUnion(totalTracks);
+}
+
+uint TagUnion::cdNr() const
+{
+	numberUnion(cdNr);
+}
+
+uint TagUnion::totalCDs() const
+{
+	numberUnion(totalCDs);
+}
+
+uint 
+TagUnion::bpm() const
+{
+	numberUnion(bpm);
+}
+
+
+
+#pragma mark -
 
 void TagUnion::setTitle(const String &s)
 {
@@ -161,6 +209,12 @@ void TagUnion::setGenre(const String &s)
   setUnion(Genre, s);
 }
 
+int TagUnion::setLyrics(const String &s)
+{
+  setUnion(Lyrics, s);
+  return 1;
+}
+
 void TagUnion::setYear(uint i)
 {
   setUnion(Year, i);
@@ -170,6 +224,51 @@ void TagUnion::setTrack(uint i)
 {
   setUnion(Track, i);
 }
+
+int TagUnion::setAlbumArtist(const String &s)
+{
+	setUnion(AlbumArtist, s);
+	return 1;
+}
+
+int  TagUnion::setGrouping(const String &s)
+{
+	setUnion(Grouping, s);
+	return 1;
+}
+
+int  TagUnion::setComposer(const String &s)
+{
+	setUnion(Composer, s);
+	return 1;
+}
+
+int  TagUnion::setTotalTracks(uint i)
+{
+	setUnion(TotalTracks, i);
+	return 1;
+}
+
+int  TagUnion::setCDNr(uint i)
+{
+	setUnion(CDNr, i);
+	return 1;
+}
+
+int  TagUnion::setTotalCDs(uint i)
+{
+	setUnion(TotalCDs, i);
+	return 1;
+}
+
+int  TagUnion::setBPM(uint i)
+{
+	setUnion(BPM, i);
+	return 1;
+}
+
+
+#pragma mark -
 
 bool TagUnion::isEmpty() const
 {

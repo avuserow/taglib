@@ -49,6 +49,7 @@ bool Tag::isEmpty() const
           album().isEmpty() &&
           comment().isEmpty() &&
           genre().isEmpty() &&
+		  lyrics().isEmpty() &&
           year() == 0 &&
           track() == 0);
 }
@@ -63,6 +64,7 @@ void Tag::duplicate(const Tag *source, Tag *target, bool overwrite) // static
     target->setGenre(source->genre());
     target->setYear(source->year());
     target->setTrack(source->track());
+	target->setLyrics(source->lyrics());
   }
   else {
     if(target->title().isEmpty())
@@ -79,5 +81,111 @@ void Tag::duplicate(const Tag *source, Tag *target, bool overwrite) // static
       target->setYear(source->year());
     if(target->track() <= 0)
       target->setTrack(source->track());
+	if (target->lyrics().isEmpty())
+	  target->setLyrics(source->lyrics());
   }
+}
+
+#pragma mark -
+
+int Tag::setLyrics(const String &s)
+{
+	return -1;
+}
+
+int Tag::setAlbumArtist(const String &s)
+{
+	return -1;
+}
+
+int  Tag::setGrouping(const String &s)
+{
+	return -1;
+}
+
+int  Tag::setComposer(const String &s)
+{
+	return -1;
+}
+
+int Tag::setTotalTracks(uint i)
+{
+	return -1;
+}
+
+int  Tag::setCDNr(uint i)
+{
+	return -1;
+}
+
+int  Tag::setTotalCDs(uint i)
+{
+	return -1;
+}
+
+int  Tag::setBPM(uint i)
+{
+	return -1;
+}
+
+int  Tag::setCompilation(bool compilation)
+{
+	return -1;
+}
+
+#pragma mark -
+
+String Tag::lyrics() const
+{
+	return String::null;
+}
+
+String Tag::albumArtist() const
+{
+	return String::null;
+}
+
+String Tag::grouping() const
+{
+	return String::null;
+}
+
+String Tag::composer() const
+{
+	return String::null;
+}
+
+uint Tag::totalTracks() const
+{
+	return 0;
+}
+
+uint Tag::cdNr() const
+{
+	return 0;
+}
+
+uint Tag::totalCDs() const
+{
+	return 0;
+}
+
+uint Tag::bpm() const
+{
+	return 0;
+}
+
+bool Tag::compilation() const
+{
+	return 0;
+}
+
+bool Tag::podcast() const
+{
+	return false;
+}
+
+bool Tag::itunesu() const
+{
+	return false;
 }

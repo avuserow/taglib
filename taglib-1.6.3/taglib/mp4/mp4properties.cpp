@@ -89,18 +89,28 @@ MP4::Properties::Properties(File *file, MP4::Atoms *atoms, ReadStyle style)
     return;
   }
 
-  file->seek(mdhd->offset);
-  data = file->readBlock(mdhd->length);
-  if(data[8] == 0) {
-    unsigned int unit = data.mid(20, 4).toUInt();
-    unsigned int length = data.mid(24, 4).toUInt();
-    d->length = length / unit;
-  }
-  else {
-    long long unit = data.mid(28, 8).toLongLong();
-    long long length = data.mid(36, 8).toLongLong();
-    d->length = int(length / unit);
-  }
+	file->seek(mdhd->offset);
+	data = file->readBlock(mdhd->length);
+	if(data[8] == 0) {
+		unsigned int unit = data.mid(20, 4).toUInt();
+		unsigned int length = data.mid(24, 4).toUInt();
+		if (unit == 0) {
+			debug("MP4: No valid data");
+			d->length = 0;
+		} else {
+			d->length = length / unit;
+		}
+	}
+	else {
+		long long unit = data.mid(28, 8).toLongLong();
+		long long length = data.mid(36, 8).toLongLong();
+		if (unit == 0) {
+			debug("MP4: No valid data");
+			d->length = 0;
+		} else {
+			d->length = int(length / unit);
+		}
+	}
 
   MP4::Atom *atom = trak->find("mdia", "minf", "stbl", "stsd");
   if(!atom) {

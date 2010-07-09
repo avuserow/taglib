@@ -36,6 +36,7 @@
 
 #include "frames/textidentificationframe.h"
 #include "frames/commentsframe.h"
+#include "frames/unsynchronizedlyricsframe.h"
 
 using namespace TagLib;
 using namespace ID3v2;
@@ -94,6 +95,7 @@ ID3v2::Tag::~Tag()
   delete d;
 }
 
+#pragma mark -
 
 String ID3v2::Tag::title() const
 {
@@ -118,20 +120,37 @@ String ID3v2::Tag::album() const
 
 String ID3v2::Tag::comment() const
 {
-  const FrameList &comments = d->frameListMap["COMM"];
-
-  if(comments.isEmpty())
-    return String::null;
-
-  for(FrameList::ConstIterator it = comments.begin(); it != comments.end(); ++it)
-  {
-    CommentsFrame *frame = dynamic_cast<CommentsFrame *>(*it);
-
-    if(frame && frame->description().isEmpty())
-      return (*it)->toString();
-  }
-
-  return comments.front()->toString();
+	const FrameList &comments = d->frameListMap["COMM"];
+	
+	if(comments.isEmpty())
+		return String::null;
+	
+	
+	//  for(FrameList::ConstIterator it = comments.begin(); it != comments.end(); ++it)
+	//  {
+	//    CommentsFrame *frame = dynamic_cast<CommentsFrame *>(*it);
+	//
+	//    if(frame && frame->description().isEmpty())
+	//      return (*it)->toString();
+	//  }
+	//allways use the last frame  (like iTunes does)
+	//but ignore the iTunes special flags
+	
+	FrameList::ConstIterator it = comments.end();
+	--it;
+	while (it != comments.end()){
+		CommentsFrame *frame = dynamic_cast<CommentsFrame *>(*it);
+		if (!(frame->description() == String("iTunNORM"))
+			&& !(frame->description() == String("iTunSMPB"))
+			&& !(frame->description() == String("iTunPGAP"))
+			&& !(frame->description() == String("iTunes_CDDB_1"))
+			&& !(frame->description() == String("iTunes_CDDB_IDs"))
+			&& !(frame->description() == String("iTunes_CDDB_TrackNumber"))) {
+			return (*it)->toString();
+		}
+		--it; //revers enumerate
+	}
+	return String::null;
 }
 
 String ID3v2::Tag::genre() const
@@ -177,19 +196,147 @@ String ID3v2::Tag::genre() const
   return genres.toString();
 }
 
-TagLib::uint ID3v2::Tag::year() const
+String ID3v2::Tag::lyrics() const
+{
+	if (!d->frameListMap["USLT"].isEmpty()) {
+		return d->frameListMap["USLT"].front()->toString();
+	}
+	return String::null;
+}
+
+uint ID3v2::Tag::year() const
 {
   if(!d->frameListMap["TDRC"].isEmpty())
     return d->frameListMap["TDRC"].front()->toString().substr(0, 4).toInt();
   return 0;
 }
 
-TagLib::uint ID3v2::Tag::track() const
+uint 
+ID3v2::Tag::track() const
 {
-  if(!d->frameListMap["TRCK"].isEmpty())
-    return d->frameListMap["TRCK"].front()->toString().toInt();
+  if(!d->frameListMap["TRCK"].isEmpty()) {
+	String trackNrAndTotalTracks(d->frameListMap["TRCK"].front()->toString());
+	
+	int seperator = trackNrAndTotalTracks.rfind(String("/"));
+	if (seperator == -1) {
+		return  d->frameListMap["TRCK"].front()->toString().toInt();
+	} else {
+		String trackNr = trackNrAndTotalTracks.substr(0,seperator);
+		return trackNr.toInt();
+	}
+  }
   return 0;
 }
+
+String
+ID3v2::Tag::albumArtist() const
+{
+	if(!d->frameListMap["TPE2"].isEmpty())
+		return d->frameListMap["TPE2"].front()->toString();
+	return String::null;
+}
+
+String 
+ID3v2::Tag::grouping() const
+{
+	if(!d->frameListMap["TIT1"].isEmpty())
+		return d->frameListMap["TIT1"].front()->toString();
+	return String::null;
+}
+
+String 
+ID3v2::Tag::composer() const
+{
+	if(!d->frameListMap["TCOM"].isEmpty())
+		return d->frameListMap["TCOM"].front()->toString();
+	return String::null;
+}
+
+uint 
+ID3v2::Tag::totalTracks() const
+{
+	if(!d->frameListMap["TRCK"].isEmpty()) {
+		String trackNrAndTotalTracks(d->frameListMap["TRCK"].front()->toString());
+		int seperator = trackNrAndTotalTracks.rfind(String("/"));
+		if (seperator == -1) {
+			return  0;
+		} else {
+			String tracks = trackNrAndTotalTracks.substr(seperator+1);
+			return tracks.toInt();
+		}
+	}
+	return 0;
+}
+
+uint 
+ID3v2::Tag::cdNr() const
+{
+	if(!d->frameListMap["TPOS"].isEmpty()) {
+		String cdNrAndTotalCDs(d->frameListMap["TPOS"].front()->toString());
+		
+		int seperator = cdNrAndTotalCDs.rfind(String("/"));
+		if (seperator == -1) {
+			return  d->frameListMap["TPOS"].front()->toString().toInt();
+		} else {
+			String cdNr = cdNrAndTotalCDs.substr(0,seperator);
+			return cdNr.toInt();
+		}
+	}
+	return 0;
+}
+
+uint 
+ID3v2::Tag::totalCDs() const
+{
+	if(!d->frameListMap["TPOS"].isEmpty()) {
+		String cdNrAndTotalCDs(d->frameListMap["TPOS"].front()->toString());
+		
+		int seperator = cdNrAndTotalCDs.rfind(String("/"));
+		if (seperator == -1) {
+			return  0;
+		} else {
+			String totalCDs = cdNrAndTotalCDs.substr(seperator+1);
+			return totalCDs.toInt();
+		}
+	}
+	return 0;
+}
+
+uint 
+ID3v2::Tag::bpm() const
+{
+	if(!d->frameListMap["TBPM"].isEmpty())
+		return d->frameListMap["TBPM"].front()->toString().toInt();
+	return 0;
+}
+
+
+bool 
+ID3v2::Tag::compilation() const
+{
+	if(!d->frameListMap["TCMP"].isEmpty())
+		return d->frameListMap["TCMP"].front()->toString().toInt();
+	return 0;
+}
+
+bool 
+ID3v2::Tag::podcast() const
+{
+	if(!d->frameListMap["PCST"].isEmpty())
+		return 1;
+	return 0;
+}
+
+bool 
+ID3v2::Tag::itunesu() const
+{
+	if(!d->frameListMap["ITNU"].isEmpty())
+		return 1;
+	return 0;
+}
+
+
+#pragma mark -
 
 void ID3v2::Tag::setTitle(const String &s)
 {
@@ -208,18 +355,45 @@ void ID3v2::Tag::setAlbum(const String &s)
 
 void ID3v2::Tag::setComment(const String &s)
 {
+	if(s.isEmpty()) {
+		removeFrames("COMM");
+		return;
+	}
+	//finda non iTunes specific frame to put the comment
+	for(FrameList::ConstIterator it = d->frameListMap["COMM"].begin(); it != d->frameListMap["COMM"].end(); ++it) {
+		CommentsFrame *frame = dynamic_cast<CommentsFrame *>(*it);
+		if (!(frame->description() == String("iTunNORM"))
+			&& !(frame->description() == String("iTunSMPB"))
+			&& !(frame->description() == String("iTunPGAP"))
+			&& !(frame->description() == String("iTunes_CDDB_1"))
+			&& !(frame->description() == String("iTunes_CDDB_IDs"))
+			&& !(frame->description() == String("iTunes_CDDB_TrackNumber"))) {
+			frame->setText(s);
+			return;
+		}
+	}
+	// if no not iTunes specific frame was found, add a new one
+	CommentsFrame *f = new CommentsFrame(d->factory->defaultTextEncoding());
+	addFrame(f);
+	f->setText(s);
+}
+
+int ID3v2::Tag::setLyrics(const String &s)
+{  
   if(s.isEmpty()) {
-    removeFrames("COMM");
-    return;
+    removeFrames("USLT");
+    return 0;
   }
 
-  if(!d->frameListMap["COMM"].isEmpty())
-    d->frameListMap["COMM"].front()->setText(s);
+  if(!d->frameListMap["USLT"].isEmpty()) {
+    d->frameListMap["USLT"].front()->setText(s);
+  }
   else {
-    CommentsFrame *f = new CommentsFrame(d->factory->defaultTextEncoding());
+    UnsynchronizedLyricsFrame *f = new UnsynchronizedLyricsFrame(d->factory->defaultTextEncoding());
     addFrame(f);
     f->setText(s);
   }
+  return 0;
 }
 
 void ID3v2::Tag::setGenre(const String &s)
@@ -259,12 +433,90 @@ void ID3v2::Tag::setYear(uint i)
 
 void ID3v2::Tag::setTrack(uint i)
 {
-  if(i <= 0) {
+  if(i <= 0 && totalTracks() <= 0) {
     removeFrames("TRCK");
     return;
   }
-  setTextFrame("TRCK", String::number(i));
+	setTextFrame("TRCK", String::number(i) += String('/') += String::number(totalTracks()));
 }
+
+int
+ID3v2::Tag::setAlbumArtist(const String &s)
+{
+	setTextFrame("TPE2", s);
+	return 0;
+}
+int 
+ID3v2::Tag::setGrouping(const String &s)
+{
+	setTextFrame("TIT1", s);
+	return 0;
+}
+
+int 
+ID3v2::Tag::setComposer(const String &s)
+{
+	setTextFrame("TCOM", s);
+	return 0;
+}
+
+int 
+ID3v2::Tag::setTotalTracks(uint i)
+{
+	if(i <= 0 && track() <= 0) {
+		removeFrames("TRCK");
+		return 0;
+	}
+	setTextFrame("TRCK", String::number(track()) += String('/') += String::number(i));
+	return 0;
+}
+
+int 
+ID3v2::Tag::setCDNr(uint i){
+	if(i <= 0 && totalCDs() <= 0) {
+		removeFrames("TPOS");
+		return 0;
+	}
+	setTextFrame("TPOS", String::number(i) += String('/') += String::number(totalCDs()));
+	return 0;
+}
+
+int 
+ID3v2::Tag::setTotalCDs(uint i)
+{
+	if(i <= 0 && cdNr() <= 0) {
+		removeFrames("TPOS");
+		return 0;
+	}
+	setTextFrame("TPOS", String::number(cdNr()) += String('/') += String::number(i));
+	return 0;
+}
+
+int 
+ID3v2::Tag::setBPM(uint i)
+{
+	if(i <= 0) {
+		removeFrames("TBPM");
+		return 0;
+	}
+	setTextFrame("TBPM", String::number(i));
+	return 0;
+}
+
+
+int
+ID3v2::Tag::setCompilation(bool compilation)
+{
+	if (!compilation) {
+		removeFrames("TCMP");
+		return 0;
+	}
+	setTextFrame("TCMP", String::number(compilation));
+	return 0;
+}
+
+
+#pragma mark -
 
 bool ID3v2::Tag::isEmpty() const
 {

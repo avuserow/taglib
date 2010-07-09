@@ -159,7 +159,7 @@ ByteVector CommentsFrame::renderFields() const
   encoding = checkEncoding(d->text, encoding);
 
   v.append(char(encoding));
-  v.append(d->language.size() == 3 ? d->language : "XXX");
+  v.append(d->language.size() == 3 ? d->language : "eng"); //use eng als default language
   v.append(d->description.data(encoding));
   v.append(textDelimiter(encoding));
   v.append(d->text.data(encoding));
