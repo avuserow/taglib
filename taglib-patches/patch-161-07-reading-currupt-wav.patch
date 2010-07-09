@@ -1,0 +1,14 @@
+diff -r 92fb0f642938 riff/rifffile.cpp
+--- a/riff/rifffile.cpp	Tue Jan 26 12:24:11 2010 +0100
++++ b/riff/rifffile.cpp	Tue Feb 02 16:05:17 2010 +0100
+@@ -184,6 +184,10 @@
+     long uPosNotPadded = tell();
+     if((uPosNotPadded & 0x01) != 0) {
+       ByteVector iByte = readBlock(1);
++	  if (iByte[0] == '\0') {
++		//file is corrupt
++		break;
++	  }
+       if((iByte.size() != 1) || (iByte[0] != 0)) {
+         // not well formed, re-seek
+         seek(uPosNotPadded, Beginning);

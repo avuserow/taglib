@@ -1,0 +1,140 @@
+diff -r 195121dc655e mp4/mp4tag.cpp
+--- a/mp4/mp4tag.cpp	Mon Dec 21 10:16:06 2009 +0100
++++ b/mp4/mp4tag.cpp	Mon Dec 21 12:08:14 2009 +0100
+@@ -352,7 +352,7 @@
+     else if(name == "disk") {
+       data.append(renderIntPairNoTrailing(name.data(String::Latin1), i->second));
+     }
+-    else if(name == "cpil" || name == "pgap" || name == "pcst") {
++    else if(name == "cpil" || name == "pgap" || name == "pcst" || name == "itnu") {
+       data.append(renderBool(name.data(String::Latin1), i->second));
+     }
+     else if(name == "tmpo") {
+@@ -667,6 +667,24 @@
+ 	return 0;
+ }
+ 
++bool 
++MP4::Tag::podcast() const
++{
++	if (d->items.contains("pcst")) {
++		return 1;
++	}
++	return 0;
++}
++
++bool 
++MP4::Tag::itunesu() const
++{
++	if (d->items.contains("itnu")) {
++		return 1;
++	}
++	return 0;
++}
++
+ #pragma mark -
+ 
+ void
+diff -r 195121dc655e mp4/mp4tag.h
+--- a/mp4/mp4tag.h	Mon Dec 21 10:16:06 2009 +0100
++++ b/mp4/mp4tag.h	Mon Dec 21 12:08:14 2009 +0100
+@@ -65,6 +65,8 @@
+ 		uint totalCDs() const;
+ 		uint bpm() const;
+ 		bool compilation() const;
++		bool podcast() const;
++		bool itunesu() const;
+ 
+         void setTitle(const String &value);
+         void setArtist(const String &value);
+diff -r 195121dc655e mpeg/id3v2/id3v2framefactory.cpp
+--- a/mpeg/id3v2/id3v2framefactory.cpp	Mon Dec 21 10:16:06 2009 +0100
++++ b/mpeg/id3v2/id3v2framefactory.cpp	Mon Dec 21 12:08:14 2009 +0100
+@@ -298,10 +298,12 @@
+     convertFrame("CRA", "AENC", header);
+     convertFrame("ETC", "ETCO", header);
+     convertFrame("GEO", "GEOB", header);
+-    convertFrame("IPL", "TIPL", header);
++	convertFrame("IPL", "TIPL", header);
++	convertFrame("ITU", "ITNU", header);
+     convertFrame("MCI", "MCDI", header);
+     convertFrame("MLL", "MLLT", header);
+-    convertFrame("POP", "POPM", header);
++	convertFrame("PCS", "PCST", header);
++	convertFrame("POP", "POPM", header);
+     convertFrame("REV", "RVRB", header);
+     convertFrame("SLT", "SYLT", header);
+     convertFrame("STC", "SYTC", header);
+diff -r 195121dc655e mpeg/id3v2/id3v2tag.cpp
+--- a/mpeg/id3v2/id3v2tag.cpp	Mon Dec 21 10:16:06 2009 +0100
++++ b/mpeg/id3v2/id3v2tag.cpp	Mon Dec 21 12:08:14 2009 +0100
+@@ -311,6 +311,21 @@
+ 	return 0;
+ }
+ 
++bool 
++ID3v2::Tag::podcast() const
++{
++	if(!d->frameListMap["PCST"].isEmpty())
++		return 1;
++	return 0;
++}
++
++bool 
++ID3v2::Tag::itunesu() const
++{
++	if(!d->frameListMap["ITNU"].isEmpty())
++		return 1;
++	return 0;
++}
+ 
+ 
+ #pragma mark -
+diff -r 195121dc655e mpeg/id3v2/id3v2tag.h
+--- a/mpeg/id3v2/id3v2tag.h	Mon Dec 21 10:16:06 2009 +0100
++++ b/mpeg/id3v2/id3v2tag.h	Mon Dec 21 12:08:14 2009 +0100
+@@ -151,6 +151,8 @@
+ 	  virtual uint totalCDs() const;
+ 	  virtual uint bpm() const;
+ 	  virtual bool compilation() const;
++	  virtual bool podcast() const;
++	  virtual bool itunesu() const;
+ 		
+ 		
+       virtual void setTitle(const String &s);
+diff -r 195121dc655e tag.cpp
+--- a/tag.cpp	Mon Dec 21 10:16:06 2009 +0100
++++ b/tag.cpp	Mon Dec 21 12:08:14 2009 +0100
+@@ -179,3 +179,13 @@
+ {
+ 	return 0;
+ }
++
++bool Tag::podcast() const
++{
++	return false;
++}
++
++bool Tag::itunesu() const
++{
++	return false;
++}
+diff -r 195121dc655e tag.h
+--- a/tag.h	Mon Dec 21 10:16:06 2009 +0100
++++ b/tag.h	Mon Dec 21 12:08:14 2009 +0100
+@@ -144,6 +144,15 @@
+ 	 */
+ 	virtual bool compilation() const;
+ 	  
++	/*!
++	 * Returns true if the podcast flag ist set otherwise false
++	 */
++	virtual bool podcast() const;
++	
++	/*! 
++	 * Returnes true if the podcast flag is set otherwise false
++	 */
++    virtual bool itunesu() const;
+ 	  
+ 	  
+ 	  

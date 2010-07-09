@@ -1,0 +1,46 @@
+== Description
+
+Patched version of TagLib (http://developer.kde.org/~wheeler/taglib.html) with support
+for some additional attributes, and a few other improvements:
+
+* albumArtist
+* grouping
+* composer
+* cdNr (CD Number)
+* totalCDs
+* totalTracks
+* bpm
+
+
+=== Patches
+The patches are originally from:
+http://osdir.com/ml/taglib-devel/2010-02/msg00014.html
+- "Re: TagLib and disc number"
+
+The patches were taken against 1.6.1, but apply cleanly to taglib 1.6.3. 
+
+The exception is patch 05, which was fixed in the base source of taglib in 1.6.2 so patch 05 is no longer needed.
+
+
+=== How to Apply the patches
+Note: the 1.6.3 source tree in this repo is already patched, like so:
+
+cp taglib-patches/* taglib-1.6.3/taglib/
+
+cd taglib-1.6.3/taglib
+
+patch -p1 < patch-161-01-id3lyrics.patch
+patch -p1 < patch-161-02-pdcs-and-itnu.patch
+patch -p1 < patch-161-03-empty-mp4-crash.patch
+patch -p1 < patch-161-04-comment-fix.patch
+patch -p1 < patch-161-06-id3v1-converter.patch
+patch -p1 < patch-161-07-reading-currupt-wav.patch
+
+
+=== Compile TagLib:
+cd taglib-1.6.3
+./configure
+make
+sudo make install
+
+

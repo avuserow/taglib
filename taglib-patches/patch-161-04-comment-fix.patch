@@ -1,0 +1,119 @@
+diff -r b50bcc4001aa mpeg/id3v2/frames/commentsframe.cpp
+--- a/mpeg/id3v2/frames/commentsframe.cpp	Mon Dec 21 15:06:47 2009 +0100
++++ b/mpeg/id3v2/frames/commentsframe.cpp	Wed Jan 13 10:19:55 2010 +0100
+@@ -159,7 +159,7 @@
+   encoding = checkEncoding(d->text, encoding);
+ 
+   v.append(char(encoding));
+-  v.append(d->language.size() == 3 ? d->language : "XXX");
++  v.append(d->language.size() == 3 ? d->language : "eng"); //use eng als default language
+   v.append(d->description.data(encoding));
+   v.append(textDelimiter(encoding));
+   v.append(d->text.data(encoding));
+diff -r b50bcc4001aa mpeg/id3v2/frames/unsynchronizedlyricsframe.cpp
+--- a/mpeg/id3v2/frames/unsynchronizedlyricsframe.cpp	Mon Dec 21 15:06:47 2009 +0100
++++ b/mpeg/id3v2/frames/unsynchronizedlyricsframe.cpp	Wed Jan 13 10:19:55 2010 +0100
+@@ -142,7 +142,7 @@
+   ByteVector v;
+ 
+   v.append(char(d->textEncoding));
+-  v.append(d->language.size() == 3 ? d->language : "XXX");
++  v.append(d->language.size() == 3 ? d->language : "eng"); //default language is eng
+   v.append(d->description.data(d->textEncoding));
+   v.append(textDelimiter(d->textEncoding));
+   v.append(d->text.data(d->textEncoding));
+diff -r b50bcc4001aa mpeg/id3v2/id3v2tag.cpp
+--- a/mpeg/id3v2/id3v2tag.cpp	Mon Dec 21 15:06:47 2009 +0100
++++ b/mpeg/id3v2/id3v2tag.cpp	Wed Jan 13 10:19:55 2010 +0100
+@@ -120,20 +120,37 @@
+ 
+ String ID3v2::Tag::comment() const
+ {
+-  const FrameList &comments = d->frameListMap["COMM"];
+-
+-  if(comments.isEmpty())
+-    return String::null;
+-
+-  for(FrameList::ConstIterator it = comments.begin(); it != comments.end(); ++it)
+-  {
+-    CommentsFrame *frame = dynamic_cast<CommentsFrame *>(*it);
+-
+-    if(frame && frame->description().isEmpty())
+-      return (*it)->toString();
+-  }
+-
+-  return comments.front()->toString();
++	const FrameList &comments = d->frameListMap["COMM"];
++	
++	if(comments.isEmpty())
++		return String::null;
++	
++	
++	//  for(FrameList::ConstIterator it = comments.begin(); it != comments.end(); ++it)
++	//  {
++	//    CommentsFrame *frame = dynamic_cast<CommentsFrame *>(*it);
++	//
++	//    if(frame && frame->description().isEmpty())
++	//      return (*it)->toString();
++	//  }
++	//allways use the last frame  (like iTunes does)
++	//but ignore the iTunes special flags
++	
++	FrameList::ConstIterator it = comments.end();
++	--it;
++	while (it != comments.end()){
++		CommentsFrame *frame = dynamic_cast<CommentsFrame *>(*it);
++		if (!(frame->description() == String("iTunNORM"))
++			&& !(frame->description() == String("iTunSMPB"))
++			&& !(frame->description() == String("iTunPGAP"))
++			&& !(frame->description() == String("iTunes_CDDB_1"))
++			&& !(frame->description() == String("iTunes_CDDB_IDs"))
++			&& !(frame->description() == String("iTunes_CDDB_TrackNumber"))) {
++			return (*it)->toString();
++		}
++		--it; //revers enumerate
++	}
++	return String::null;
+ }
+ 
+ String ID3v2::Tag::genre() const
+@@ -347,18 +364,27 @@
+ 
+ void ID3v2::Tag::setComment(const String &s)
+ {
+-  if(s.isEmpty()) {
+-    removeFrames("COMM");
+-    return;
+-  }
+-
+-  if(!d->frameListMap["COMM"].isEmpty())
+-    d->frameListMap["COMM"].front()->setText(s);
+-  else {
+-    CommentsFrame *f = new CommentsFrame(d->factory->defaultTextEncoding());
+-    addFrame(f);
+-    f->setText(s);
+-  }
++	if(s.isEmpty()) {
++		removeFrames("COMM");
++		return;
++	}
++	//finda non iTunes specific frame to put the comment
++	for(FrameList::ConstIterator it = d->frameListMap["COMM"].begin(); it != d->frameListMap["COMM"].end(); ++it) {
++		CommentsFrame *frame = dynamic_cast<CommentsFrame *>(*it);
++		if (!(frame->description() == String("iTunNORM"))
++			&& !(frame->description() == String("iTunSMPB"))
++			&& !(frame->description() == String("iTunPGAP"))
++			&& !(frame->description() == String("iTunes_CDDB_1"))
++			&& !(frame->description() == String("iTunes_CDDB_IDs"))
++			&& !(frame->description() == String("iTunes_CDDB_TrackNumber"))) {
++			frame->setText(s);
++			return;
++		}
++	}
++	// if no not iTunes specific frame was found, add a new one
++	CommentsFrame *f = new CommentsFrame(d->factory->defaultTextEncoding());
++	addFrame(f);
++	f->setText(s);
+ }
+ 
+ int ID3v2::Tag::setLyrics(const String &s)

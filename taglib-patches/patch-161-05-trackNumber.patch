@@ -1,0 +1,58 @@
+diff -r 1fb089da3140 mp4/mp4tag.cpp
+--- a/mp4/mp4tag.cpp	Thu Jan 21 17:32:17 2010 +0100
++++ b/mp4/mp4tag.cpp	Fri Jan 22 15:13:57 2010 +0100
+@@ -283,7 +283,7 @@
+               ByteVector::fromShort(item.toIntPair().first) +
+               ByteVector::fromShort(item.toIntPair().second) +
+               ByteVector(2, '\0'));
+-  return renderData(name, 0x15, data);
++  return renderData(name, 0x00, data);
+ }
+ 
+ ByteVector
+@@ -293,7 +293,7 @@
+   data.append(ByteVector(2, '\0') +
+               ByteVector::fromShort(item.toIntPair().first) +
+               ByteVector::fromShort(item.toIntPair().second));
+-  return renderData(name, 0x15, data);
++  return renderData(name, 0x00, data);
+ }
+ 
+ ByteVector
+@@ -733,7 +733,8 @@
+ void
+ MP4::Tag::setTrack(uint value)
+ {
+-  d->items["trkn"] = MP4::Item(value, 0);
++	uint totalTracks = this->totalTracks();
++  d->items["trkn"] = MP4::Item(value, totalTracks);
+ }
+ 
+ int
+@@ -759,20 +760,23 @@
+ int 
+ MP4::Tag::setTotalTracks(uint value)
+ {
+-	d->items["trkn"] = MP4::Item(0, value);
++	unsigned int trackNumber = this->track();
++	d->items["trkn"] = MP4::Item(trackNumber, value);
+ 	return 0;
+ }
+ 
+ int 
+ MP4::Tag::setCDNr(uint value){
+-	d->items["disk"] = MP4::Item(value, 0);
++	uint totalCDNumbers = this->totalCDs();
++	d->items["disk"] = MP4::Item(value, totalCDNumbers);
+ 	return 0;
+ }
+ 
+ int 
+ MP4::Tag::setTotalCDs(uint value)
+ {
+-	d->items["trkn"] = MP4::Item(0, value);
++	uint cdnr = this->cdNr();
++	d->items["disk"] = MP4::Item(cdnr, value);
+ 	return 0;
+ }
+ 

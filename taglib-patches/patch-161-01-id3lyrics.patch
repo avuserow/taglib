@@ -1,0 +1,1073 @@
+diff -r bae0e4a2e14b mp4/mp4tag.cpp
+--- a/mp4/mp4tag.cpp	Wed Nov 18 13:31:18 2009 +0100
++++ b/mp4/mp4tag.cpp	Fri Dec 11 14:56:53 2009 +0100
+@@ -211,7 +211,20 @@
+       debug("MP4: Unexpected atom \"" + name + "\", expecting \"data\"");
+       return;
+     }
+-    if(flags == MP4::CoverArt::PNG || flags == MP4::CoverArt::JPEG) {
++	if (flags == 0) { //detect cover format when the cover format bytes are not set
++		ByteVector picHeader = data.mid(pos+16,9);
++		const char jpeg[] = {0xff, 0xd8, 0xff, 0xe0 };
++		const char jfif[] = {0x10, 0x4a, 0x46, 0x49, 0x46 };
++		const char png[] = {0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00 };
++		if ((memcmp(picHeader.data(), png, 9) == 0)) {
++			flags = MP4::CoverArt::PNG;
++		} else if ((memcmp(picHeader.data(), jpeg, 4) == 0)) {
++			flags = MP4::CoverArt::JPEG;
++		} else if ((memcmp(picHeader.data(), jfif, 5) == 0)) {
++			flags = MP4::CoverArt::JPEG;
++		}
++	}
++    if(flags == MP4::CoverArt::PNG || flags == MP4::CoverArt::JPEG || flags == 0) {
+       value.append(MP4::CoverArt(MP4::CoverArt::Format(flags),
+                                  data.mid(pos + 16, length - 16)));
+     }
+@@ -529,6 +542,8 @@
+   }
+ }
+ 
++#pragma mark -
++
+ String
+ MP4::Tag::title() const
+ {
+@@ -569,6 +584,14 @@
+   return String::null;
+ }
+ 
++String
++MP4::Tag::lyrics() const
++{
++  if(d->items.contains("\251lyr"))
++    return d->items["\251lyr"].toStringList().toString(", ");
++  return String::null;
++}
++
+ unsigned int
+ MP4::Tag::year() const
+ {
+@@ -585,6 +608,67 @@
+   return 0;
+ }
+ 
++String 
++MP4::Tag::albumArtist() const
++{
++	if(d->items.contains("aART"))
++		return d->items["aART"].toStringList().toString(", ");
++	return String::null;
++}
++String  
++MP4::Tag::grouping() const
++{
++	if(d->items.contains("\251grp"))
++		return d->items["\251grp"].toStringList().toString(", ");
++	return String::null;
++}
++String  
++MP4::Tag::composer() const
++{
++	if(d->items.contains("\251wrt"))
++		return d->items["\251wrt"].toStringList().toString(", ");
++	return String::null;
++}
++uint  
++MP4::Tag::totalTracks() const
++{
++	if(d->items.contains("trkn"))
++		return d->items["trkn"].toIntPair().second;
++	return 0;
++}
++uint  
++MP4::Tag::cdNr() const
++{
++	if(d->items.contains("disk"))
++		return d->items["disk"].toIntPair().first;
++	return 0;
++}
++uint  
++MP4::Tag::totalCDs() const
++{
++	if(d->items.contains("disk"))
++		return d->items["disk"].toIntPair().second;
++	return 0;	
++}
++uint  
++MP4::Tag::bpm() const
++{
++	if(d->items.contains("tmpo"))
++		return d->items["tmpo"].toInt();
++	return 0;
++}
++
++bool
++MP4::Tag::compilation() const
++{
++	if (d->items.contains("cpil")) {
++		return d->items["cpil"].toStringList().toString().toInt();
++	}
++	return 0;
++}
++
++#pragma mark -
++
+ void
+ MP4::Tag::setTitle(const String &value)
+ {
+@@ -615,6 +699,13 @@
+   d->items["\251gen"] = StringList(value);
+ }
+ 
++int
++MP4::Tag::setLyrics(const String &value)
++{
++  d->items["\251lyr"] = StringList(value);
++  return 0;
++}
++
+ void
+ MP4::Tag::setYear(uint value)
+ {
+@@ -627,6 +718,63 @@
+   d->items["trkn"] = MP4::Item(value, 0);
+ }
+ 
++int
++MP4::Tag::setAlbumArtist(const String &value)
++{
++	d->items["aART"] = StringList(value);
++	return 0;
++}
++int 
++MP4::Tag::setGrouping(const String &value)
++{
++	d->items["\251grp"] = StringList(value);
++	return 0;
++}
++
++int 
++MP4::Tag::setComposer(const String &value)
++{
++	d->items["\251wrt"] = StringList(value);
++	return 0;
++}
++
++int 
++MP4::Tag::setTotalTracks(uint value)
++{
++	d->items["trkn"] = MP4::Item(0, value);
++	return 0;
++}
++
++int 
++MP4::Tag::setCDNr(uint value){
++	d->items["disk"] = MP4::Item(value, 0);
++	return 0;
++}
++
++int 
++MP4::Tag::setTotalCDs(uint value)
++{
++	d->items["trkn"] = MP4::Item(0, value);
++	return 0;
++}
++
++int 
++MP4::Tag::setBPM(uint value)
++{
++	d->items["tmpo"] = MP4::Item((int)value);
++	return 0;
++}
++
++int
++MP4::Tag::setCompilation(bool compilation)
++{
++	d->items["cpil"] = StringList(String::number(compilation));
++	return 0;
++}
++
++
++#pragma mark -
++
+ MP4::ItemListMap &
+ MP4::Tag::itemListMap()
+ {
+diff -r bae0e4a2e14b mp4/mp4tag.h
+--- a/mp4/mp4tag.h	Wed Nov 18 13:31:18 2009 +0100
++++ b/mp4/mp4tag.h	Fri Dec 11 14:56:53 2009 +0100
+@@ -53,16 +53,37 @@
+         String album() const;
+         String comment() const;
+         String genre() const;
++        String lyrics() const;
+         uint year() const;
+         uint track() const;
++		
++		String albumArtist() const;
++		String grouping() const;
++		String composer() const;
++		uint totalTracks() const;
++		uint cdNr() const;
++		uint totalCDs() const;
++		uint bpm() const;
++		bool compilation() const;
+ 
+         void setTitle(const String &value);
+         void setArtist(const String &value);
+         void setAlbum(const String &value);
+         void setComment(const String &value);
+         void setGenre(const String &value);
++        int  setLyrics(const String &value);
+         void setYear(uint value);
+         void setTrack(uint value);
++		
++		int setAlbumArtist(const String &s);
++		int setGrouping(const String &s);
++		int setComposer(const String &s);
++		int setTotalTracks(uint i);
++		int setCDNr(uint i);
++		int setTotalCDs(uint i);
++		int setBPM(uint i);
++		int setCompilation(bool compilation);
++		
+ 
+         ItemListMap &itemListMap();
+ 
+diff -r bae0e4a2e14b mpeg/id3v2/id3v2framefactory.cpp
+--- a/mpeg/id3v2/id3v2framefactory.cpp	Wed Nov 18 13:31:18 2009 +0100
++++ b/mpeg/id3v2/id3v2framefactory.cpp	Fri Dec 11 14:56:53 2009 +0100
+@@ -309,6 +309,7 @@
+     convertFrame("TBP", "TBPM", header);
+     convertFrame("TCM", "TCOM", header);
+     convertFrame("TCO", "TCON", header);
++	convertFrame("TCP", "TCMP", header);
+     convertFrame("TCR", "TCOP", header);
+     convertFrame("TDA", "TDRC", header);
+     convertFrame("TDY", "TDLY", header);
+@@ -348,8 +349,8 @@
+     convertFrame("WCP", "WCOP", header);
+     convertFrame("WPB", "WPUB", header);
+     convertFrame("WXX", "WXXX", header);
+-
+-    break;
++	
++	break;
+   }
+ 
+   case 3: // ID3v2.3
+diff -r bae0e4a2e14b mpeg/id3v2/id3v2tag.cpp
+--- a/mpeg/id3v2/id3v2tag.cpp	Wed Nov 18 13:31:18 2009 +0100
++++ b/mpeg/id3v2/id3v2tag.cpp	Fri Dec 11 14:56:53 2009 +0100
+@@ -36,6 +36,7 @@
+ 
+ #include "frames/textidentificationframe.h"
+ #include "frames/commentsframe.h"
++#include "frames/unsynchronizedlyricsframe.h"
+ 
+ using namespace TagLib;
+ using namespace ID3v2;
+@@ -94,6 +95,7 @@
+   delete d;
+ }
+ 
++#pragma mark -
+ 
+ String ID3v2::Tag::title() const
+ {
+@@ -186,20 +188,133 @@
+   return genres.toString();
+ }
+ 
+-TagLib::uint ID3v2::Tag::year() const
++String ID3v2::Tag::lyrics() const
++{
++	if (!d->frameListMap["USLT"].isEmpty()) {
++		return d->frameListMap["USLT"].front()->toString();
++	}
++	return String::null;
++}
++
++uint ID3v2::Tag::year() const
+ {
+   if(!d->frameListMap["TDRC"].isEmpty())
+     return d->frameListMap["TDRC"].front()->toString().substr(0, 4).toInt();
+   return 0;
+ }
+ 
+-TagLib::uint ID3v2::Tag::track() const
++uint 
++ID3v2::Tag::track() const
+ {
+-  if(!d->frameListMap["TRCK"].isEmpty())
+-    return d->frameListMap["TRCK"].front()->toString().toInt();
++  if(!d->frameListMap["TRCK"].isEmpty()) {
++	String trackNrAndTotalTracks(d->frameListMap["TRCK"].front()->toString());
++	
++	int seperator = trackNrAndTotalTracks.rfind(String("/"));
++	if (seperator == -1) {
++		return  d->frameListMap["TRCK"].front()->toString().toInt();
++	} else {
++		String trackNr = trackNrAndTotalTracks.substr(0,seperator);
++		return trackNr.toInt();
++	}
++  }
+   return 0;
+ }
+ 
++String
++ID3v2::Tag::albumArtist() const
++{
++	if(!d->frameListMap["TPE2"].isEmpty())
++		return d->frameListMap["TPE2"].front()->toString();
++	return String::null;
++}
++
++String 
++ID3v2::Tag::grouping() const
++{
++	if(!d->frameListMap["TIT1"].isEmpty())
++		return d->frameListMap["TIT1"].front()->toString();
++	return String::null;
++}
++
++String 
++ID3v2::Tag::composer() const
++{
++	if(!d->frameListMap["TCOM"].isEmpty())
++		return d->frameListMap["TCOM"].front()->toString();
++	return String::null;
++}
++
++uint 
++ID3v2::Tag::totalTracks() const
++{
++	if(!d->frameListMap["TRCK"].isEmpty()) {
++		String trackNrAndTotalTracks(d->frameListMap["TRCK"].front()->toString());
++		int seperator = trackNrAndTotalTracks.rfind(String("/"));
++		if (seperator == -1) {
++			return  0;
++		} else {
++			String tracks = trackNrAndTotalTracks.substr(seperator+1);
++			return tracks.toInt();
++		}
++	}
++	return 0;
++}
++
++uint 
++ID3v2::Tag::cdNr() const
++{
++	if(!d->frameListMap["TPOS"].isEmpty()) {
++		String cdNrAndTotalCDs(d->frameListMap["TPOS"].front()->toString());
++		
++		int seperator = cdNrAndTotalCDs.rfind(String("/"));
++		if (seperator == -1) {
++			return  d->frameListMap["TPOS"].front()->toString().toInt();
++		} else {
++			String cdNr = cdNrAndTotalCDs.substr(0,seperator);
++			return cdNr.toInt();
++		}
++	}
++	return 0;
++}
++
++uint 
++ID3v2::Tag::totalCDs() const
++{
++	if(!d->frameListMap["TPOS"].isEmpty()) {
++		String cdNrAndTotalCDs(d->frameListMap["TPOS"].front()->toString());
++		
++		int seperator = cdNrAndTotalCDs.rfind(String("/"));
++		if (seperator == -1) {
++			return  0;
++		} else {
++			String totalCDs = cdNrAndTotalCDs.substr(seperator+1);
++			return totalCDs.toInt();
++		}
++	}
++	return 0;
++}
++
++uint 
++ID3v2::Tag::bpm() const
++{
++	if(!d->frameListMap["TBPM"].isEmpty())
++		return d->frameListMap["TBPM"].front()->toString().toInt();
++	return 0;
++}
++
++
++bool 
++ID3v2::Tag::compilation() const
++{
++	if(!d->frameListMap["TCMP"].isEmpty())
++		return d->frameListMap["TCMP"].front()->toString().toInt();
++	return 0;
++}
++
++
++
++#pragma mark -
++
+ void ID3v2::Tag::setTitle(const String &s)
+ {
+   setTextFrame("TIT2", s);
+@@ -231,6 +346,24 @@
+   }
+ }
+ 
++int ID3v2::Tag::setLyrics(const String &s)
++{  
++  if(s.isEmpty()) {
++    removeFrames("USLT");
++    return 0;
++  }
++
++  if(!d->frameListMap["USLT"].isEmpty()) {
++    d->frameListMap["USLT"].front()->setText(s);
++  }
++  else {
++    UnsynchronizedLyricsFrame *f = new UnsynchronizedLyricsFrame(d->factory->defaultTextEncoding());
++    addFrame(f);
++    f->setText(s);
++  }
++  return 0;
++}
++
+ void ID3v2::Tag::setGenre(const String &s)
+ {
+   if(s.isEmpty()) {
+@@ -268,13 +401,91 @@
+ 
+ void ID3v2::Tag::setTrack(uint i)
+ {
+-  if(i <= 0) {
++  if(i <= 0 && totalTracks() <= 0) {
+     removeFrames("TRCK");
+     return;
+   }
+-  setTextFrame("TRCK", String::number(i));
++	setTextFrame("TRCK", String::number(i) += String('/') += String::number(totalTracks()));
+ }
+ 
++int
++ID3v2::Tag::setAlbumArtist(const String &s)
++{
++	setTextFrame("TPE2", s);
++	return 0;
++}
++int 
++ID3v2::Tag::setGrouping(const String &s)
++{
++	setTextFrame("TIT1", s);
++	return 0;
++}
++
++int 
++ID3v2::Tag::setComposer(const String &s)
++{
++	setTextFrame("TCOM", s);
++	return 0;
++}
++
++int 
++ID3v2::Tag::setTotalTracks(uint i)
++{
++	if(i <= 0 && track() <= 0) {
++		removeFrames("TRCK");
++		return 0;
++	}
++	setTextFrame("TRCK", String::number(track()) += String('/') += String::number(i));
++	return 0;
++}
++
++int 
++ID3v2::Tag::setCDNr(uint i){
++	if(i <= 0 && totalCDs() <= 0) {
++		removeFrames("TPOS");
++		return 0;
++	}
++	setTextFrame("TPOS", String::number(i) += String('/') += String::number(totalCDs()));
++	return 0;
++}
++
++int 
++ID3v2::Tag::setTotalCDs(uint i)
++{
++	if(i <= 0 && cdNr() <= 0) {
++		removeFrames("TPOS");
++		return 0;
++	}
++	setTextFrame("TPOS", String::number(cdNr()) += String('/') += String::number(i));
++	return 0;
++}
++
++int 
++ID3v2::Tag::setBPM(uint i)
++{
++	if(i <= 0) {
++		removeFrames("TBPM");
++		return 0;
++	}
++	setTextFrame("TBPM", String::number(i));
++	return 0;
++}
++
++
++int
++ID3v2::Tag::setCompilation(bool compilation)
++{
++	if (!compilation) {
++		removeFrames("TCMP");
++		return 0;
++	}
++	setTextFrame("TCMP", String::number(compilation));
++	return 0;
++}
++
++
++#pragma mark -
++
+ bool ID3v2::Tag::isEmpty() const
+ {
+   return d->frameList.isEmpty();
+diff -r bae0e4a2e14b mpeg/id3v2/id3v2tag.h
+--- a/mpeg/id3v2/id3v2tag.h	Wed Nov 18 13:31:18 2009 +0100
++++ b/mpeg/id3v2/id3v2tag.h	Fri Dec 11 14:56:53 2009 +0100
+@@ -139,16 +139,37 @@
+       virtual String album() const;
+       virtual String comment() const;
+       virtual String genre() const;
++      virtual String lyrics() const;
+       virtual uint year() const;
+       virtual uint track() const;
+-
++		
++	  virtual String albumArtist() const;
++	  virtual String grouping() const;
++	  virtual String composer() const;
++	  virtual uint totalTracks() const;
++	  virtual uint cdNr() const;
++	  virtual uint totalCDs() const;
++	  virtual uint bpm() const;
++	  virtual bool compilation() const;
++		
++		
+       virtual void setTitle(const String &s);
+       virtual void setArtist(const String &s);
+       virtual void setAlbum(const String &s);
+       virtual void setComment(const String &s);
+       virtual void setGenre(const String &s);
++      virtual int  setLyrics(const String &s);
+       virtual void setYear(uint i);
+       virtual void setTrack(uint i);
++		
++	  virtual int setAlbumArtist(const String &s);
++	  virtual int setGrouping(const String &s);
++	  virtual int setComposer(const String &s);
++	  virtual int setTotalTracks(uint i);
++	  virtual int setCDNr(uint i);
++	  virtual int setTotalCDs(uint i);
++	  virtual int setBPM(uint i);
++	  virtual int setCompilation(bool compilation);
+ 
+       virtual bool isEmpty() const;
+ 
+diff -r bae0e4a2e14b mpeg/mpegfile.cpp
+--- a/mpeg/mpegfile.cpp	Wed Nov 18 13:31:18 2009 +0100
++++ b/mpeg/mpegfile.cpp	Fri Dec 11 14:56:53 2009 +0100
+@@ -120,7 +120,8 @@
+ 
+ TagLib::Tag *MPEG::File::tag() const
+ {
+-  return &d->tag;
++	return d->tag.access<ID3v2::Tag>(ID3v2Index, true);
++	//return &d->tag;
+ }
+ 
+ MPEG::Properties *MPEG::File::audioProperties() const
+@@ -159,11 +160,13 @@
+   // Create the tags if we've been asked to.  Copy the values from the tag that
+   // does exist into the new tag.
+ 
+-  if((tags & ID3v2) && ID3v1Tag())
+-    Tag::duplicate(ID3v1Tag(), ID3v2Tag(true), false);
+-
++  //we do not need to create new ID3v2 tag and copy v1 tags in it
++  //we use only v2 tags
++  //if((tags & ID3v2) && ID3v1Tag())
++  //Tag::duplicate(ID3v1Tag(), ID3v2Tag(true), false);
++	
+   if((tags & ID3v1) && d->tag[ID3v2Index])
+-    Tag::duplicate(ID3v2Tag(), ID3v1Tag(true), false);
++	Tag::duplicate(ID3v2Tag(), ID3v1Tag(), true);
+ 
+   bool success = true;
+ 
+diff -r bae0e4a2e14b tag.cpp
+--- a/tag.cpp	Wed Nov 18 13:31:18 2009 +0100
++++ b/tag.cpp	Fri Dec 11 14:56:53 2009 +0100
+@@ -49,6 +49,7 @@
+           album().isEmpty() &&
+           comment().isEmpty() &&
+           genre().isEmpty() &&
++		  lyrics().isEmpty() &&
+           year() == 0 &&
+           track() == 0);
+ }
+@@ -63,6 +64,7 @@
+     target->setGenre(source->genre());
+     target->setYear(source->year());
+     target->setTrack(source->track());
++	target->setLyrics(source->lyrics());
+   }
+   else {
+     if(target->title().isEmpty())
+@@ -79,5 +81,101 @@
+       target->setYear(source->year());
+     if(target->track() <= 0)
+       target->setTrack(source->track());
++	if (target->lyrics().isEmpty())
++	  target->setLyrics(source->lyrics());
+   }
+ }
++
++#pragma mark -
++
++int Tag::setLyrics(const String &s)
++{
++	return -1;
++}
++
++int Tag::setAlbumArtist(const String &s)
++{
++	return -1;
++}
++
++int  Tag::setGrouping(const String &s)
++{
++	return -1;
++}
++
++int  Tag::setComposer(const String &s)
++{
++	return -1;
++}
++
++int Tag::setTotalTracks(uint i)
++{
++	return -1;
++}
++
++int  Tag::setCDNr(uint i)
++{
++	return -1;
++}
++
++int  Tag::setTotalCDs(uint i)
++{
++	return -1;
++}
++
++int  Tag::setBPM(uint i)
++{
++	return -1;
++}
++
++int  Tag::setCompilation(bool compilation)
++{
++	return -1;
++}
++
++#pragma mark -
++
++String Tag::lyrics() const
++{
++	return String::null;
++}
++
++String Tag::albumArtist() const
++{
++	return String::null;
++}
++
++String Tag::grouping() const
++{
++	return String::null;
++}
++
++String Tag::composer() const
++{
++	return String::null;
++}
++
++uint Tag::totalTracks() const
++{
++	return 0;
++}
++
++uint Tag::cdNr() const
++{
++	return 0;
++}
++
++uint Tag::totalCDs() const
++{
++	return 0;
++}
++
++uint Tag::bpm() const
++{
++	return 0;
++}
++
++bool Tag::compilation() const
++{
++	return 0;
++}
+diff -r bae0e4a2e14b tag.h
+--- a/tag.h	Wed Nov 18 13:31:18 2009 +0100
++++ b/tag.h	Fri Dec 11 14:56:53 2009 +0100
+@@ -62,6 +62,12 @@
+      */
+     virtual String artist() const = 0;
+ 
++	/*!
++	 * Returns the album artist name; if no album artist name is present in the 
++	 * tag String::null will be returned.
++	 */
++	virtual String albumArtist() const;
++	  
+     /*!
+      * Returns the album name; if no album name is present in the tag
+      * String::null will be returned.
+@@ -73,13 +79,31 @@
+      * String::null will be returned.
+      */
+     virtual String comment() const = 0;
+-
++	  
+     /*!
++     * Returns the track grouping; if no grouping is present in the tag
++     * String::null will be returned.
++     */
++    virtual String grouping() const;
++    
++	/*!
+      * Returns the genre name; if no genre is present in the tag String::null
+      * will be returned.
+      */
+     virtual String genre() const = 0;
++	  
++	/*!
++	 * Returns the composer name; if no composer is present in the tag String::null
++	 * will be returned.
++	 */
++	virtual String composer() const;
+ 
++	/*!
++	 * Returns the genre lyrics; if no lyrics is present in the tag String::null
++	 * will be returned.
++	 */
++    virtual String lyrics() const;
++	  
+     /*!
+      * Returns the year; if there is no year set, this will return 0.
+      */
+@@ -90,7 +114,39 @@
+      * return 0.
+      */
+     virtual uint track() const = 0;
++	  
++    /*!
++	 * Returns the track number; if there is no track number set, this will
++	 * return 0.
++	 */
++	virtual uint totalTracks() const;
+ 
++	/*!
++	 * Returns the cd number; if there is no cd number set, this will
++	 * return 0.
++	 */
++	virtual uint cdNr() const;
++	
++	/*!
++	 * Returns the total cds; if there is no total cds set, this will
++	 * return 0.
++	 */
++	virtual uint totalCDs() const;
++	  
++	/*!
++	 * Returns the BPM; if there is no BPM set, this will
++	 * return 0.
++	 */
++	virtual uint bpm() const;
++	  
++	/*!
++	 * Returns true if the track is part of a compilation
++	 */
++	virtual bool compilation() const;
++	  
++	  
++	  
++	  
+     /*!
+      * Sets the title to \a s.  If \a s is String::null then this value will be
+      * cleared.
+@@ -108,6 +164,12 @@
+      * cleared.
+      */
+     virtual void setAlbum(const String &s) = 0;
++	  
++	/*!
++	 * Sets the album artist to \a s.  If \a s is String::null then this value 
++	 * will be cleared.
++	 */
++	virtual int setAlbumArtist(const String &s);
+ 
+     /*!
+      * Sets the comment to \a s.  If \a s is String::null then this value will be
+@@ -123,7 +185,24 @@
+      * implementation.
+      */
+     virtual void setGenre(const String &s) = 0;
+-
++	  
++	/*!
++	 * Sets the grouping to \a s.
++	 */
++	virtual int setGrouping(const String &s);
++	  
++	/*!
++	 * Sets the composer to \a s.
++	 */
++	virtual int setComposer(const String &s);
++	  
++	/*!
++	 * Sets the lyrics to \a s. If \a s is String::null then this value will be
++	 * cleared. If no lyric could be set -1 is returned. If lyrics could be set 
++	 * 0 is returned.
++	 */
++	virtual int setLyrics(const String &s);
++	  
+     /*!
+      * Sets the year to \a i.  If \a s is 0 then this value will be cleared.
+      */
+@@ -133,7 +212,38 @@
+      * Sets the track to \a i.  If \a s is 0 then this value will be cleared.
+      */
+     virtual void setTrack(uint i) = 0;
++	  
++	/*!
++	 * Stes the nuber of tracks to \a i. If \a s is 0 then this value will be 
++	 * cleared.
++	 */
++    virtual int setTotalTracks(uint i);
+ 
++	 
++	/*!
++	 * Sets the cd nr to \a i.  If \a s is 0 then this value will be cleared.
++	 */
++	virtual int setCDNr(uint i);
++	
++	/*!
++	 * Stes the number of cds to \a i. If \a s is 0 then this value will be 
++	 * cleared.
++	 */
++	virtual int setTotalCDs(uint i);
++	  
++	/*!
++	 * Stes the BPM to \a i. If \a s is 0 then this value will be 
++	 * cleared.
++	 */
++	virtual int setBPM(uint i);
++	  
++	  
++	/*!
++	 * Stes the BPM to \a i. If \a s is 0 then this value will be 
++	 * cleared.
++	 */
++	virtual int setCompilation(bool compilation);
++	  
+     /*!
+      * Returns true if the tag does not contain any data.  This should be
+      * reimplemented in subclasses that provide more than the basic tagging
+diff -r bae0e4a2e14b tagunion.cpp
+--- a/tagunion.cpp	Wed Nov 18 13:31:18 2009 +0100
++++ b/tagunion.cpp	Fri Dec 11 14:56:53 2009 +0100
+@@ -101,6 +101,8 @@
+   d->tags[index] = tag;
+ }
+ 
++#pragma mark -
++
+ String TagUnion::title() const
+ {
+   stringUnion(title);
+@@ -126,6 +128,11 @@
+   stringUnion(genre);
+ }
+ 
++String TagUnion::lyrics() const
++{
++	stringUnion(lyrics);
++}
++
+ TagLib::uint TagUnion::year() const
+ {
+   numberUnion(year);
+@@ -136,6 +143,47 @@
+   numberUnion(track);
+ }
+ 
++String TagUnion::albumArtist() const
++{
++	stringUnion(albumArtist);
++}
++
++String TagUnion::grouping() const
++{
++	stringUnion(grouping);
++}
++
++String 
++TagUnion::composer() const
++{
++	stringUnion(composer);
++}
++
++uint TagUnion::totalTracks() const
++{
++	numberUnion(totalTracks);
++}
++
++uint TagUnion::cdNr() const
++{
++	numberUnion(cdNr);
++}
++
++uint TagUnion::totalCDs() const
++{
++	numberUnion(totalCDs);
++}
++
++uint 
++TagUnion::bpm() const
++{
++	numberUnion(bpm);
++}
++
++
++
++#pragma mark -
++
+ void TagUnion::setTitle(const String &s)
+ {
+   setUnion(Title, s);
+@@ -161,6 +209,12 @@
+   setUnion(Genre, s);
+ }
+ 
++int TagUnion::setLyrics(const String &s)
++{
++  setUnion(Lyrics, s);
++  return 1;
++}
++
+ void TagUnion::setYear(uint i)
+ {
+   setUnion(Year, i);
+@@ -171,6 +225,51 @@
+   setUnion(Track, i);
+ }
+ 
++int TagUnion::setAlbumArtist(const String &s)
++{
++	setUnion(AlbumArtist, s);
++	return 1;
++}
++
++int  TagUnion::setGrouping(const String &s)
++{
++	setUnion(Grouping, s);
++	return 1;
++}
++
++int  TagUnion::setComposer(const String &s)
++{
++	setUnion(Composer, s);
++	return 1;
++}
++
++int  TagUnion::setTotalTracks(uint i)
++{
++	setUnion(TotalTracks, i);
++	return 1;
++}
++
++int  TagUnion::setCDNr(uint i)
++{
++	setUnion(CDNr, i);
++	return 1;
++}
++
++int  TagUnion::setTotalCDs(uint i)
++{
++	setUnion(TotalCDs, i);
++	return 1;
++}
++
++int  TagUnion::setBPM(uint i)
++{
++	setUnion(BPM, i);
++	return 1;
++}
++
++
++#pragma mark -
++
+ bool TagUnion::isEmpty() const
+ {
+   if(d->tags[0] && !d->tags[0]->isEmpty())
+diff -r bae0e4a2e14b tagunion.h
+--- a/tagunion.h	Wed Nov 18 13:31:18 2009 +0100
++++ b/tagunion.h	Fri Dec 11 14:56:53 2009 +0100
+@@ -61,17 +61,36 @@
+     virtual String album() const;
+     virtual String comment() const;
+     virtual String genre() const;
++    virtual String lyrics() const;
+     virtual uint year() const;
+     virtual uint track() const;
+-
++	  
++	virtual String albumArtist() const;
++	virtual String grouping() const;
++	virtual String composer() const;
++	virtual uint totalTracks() const;
++	virtual uint cdNr() const;
++	virtual uint totalCDs() const;
++	virtual uint bpm() const;
++	  
+     virtual void setTitle(const String &s);
+     virtual void setArtist(const String &s);
+     virtual void setAlbum(const String &s);
+     virtual void setComment(const String &s);
+     virtual void setGenre(const String &s);
++    virtual int  setLyrics(const String &s);
+     virtual void setYear(uint i);
+     virtual void setTrack(uint i);
+     virtual bool isEmpty() const;
++	  
++	virtual int setAlbumArtist(const String &s);
++	virtual int setGrouping(const String &s);
++	virtual int setComposer(const String &s);
++	virtual int setTotalTracks(uint i);
++	virtual int setCDNr(uint i);
++	virtual int setTotalCDs(uint i);
++	virtual int setBPM(uint i);
++
+ 
+     template <class T> T *access(int index, bool create)
+     {
