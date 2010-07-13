@@ -204,14 +204,14 @@ String ID3v2::Tag::lyrics() const
 	return String::null;
 }
 
-uint ID3v2::Tag::year() const
+TagLib::uint ID3v2::Tag::year() const
 {
   if(!d->frameListMap["TDRC"].isEmpty())
     return d->frameListMap["TDRC"].front()->toString().substr(0, 4).toInt();
   return 0;
 }
 
-uint 
+TagLib::uint 
 ID3v2::Tag::track() const
 {
   if(!d->frameListMap["TRCK"].isEmpty()) {
@@ -252,7 +252,7 @@ ID3v2::Tag::composer() const
 	return String::null;
 }
 
-uint 
+TagLib::uint 
 ID3v2::Tag::totalTracks() const
 {
 	if(!d->frameListMap["TRCK"].isEmpty()) {
@@ -268,7 +268,7 @@ ID3v2::Tag::totalTracks() const
 	return 0;
 }
 
-uint 
+TagLib::uint 
 ID3v2::Tag::cdNr() const
 {
 	if(!d->frameListMap["TPOS"].isEmpty()) {
@@ -285,7 +285,7 @@ ID3v2::Tag::cdNr() const
 	return 0;
 }
 
-uint 
+TagLib::uint 
 ID3v2::Tag::totalCDs() const
 {
 	if(!d->frameListMap["TPOS"].isEmpty()) {
@@ -302,7 +302,7 @@ ID3v2::Tag::totalCDs() const
 	return 0;
 }
 
-uint 
+TagLib::uint 
 ID3v2::Tag::bpm() const
 {
 	if(!d->frameListMap["TBPM"].isEmpty())
@@ -422,7 +422,7 @@ void ID3v2::Tag::setGenre(const String &s)
 #endif
 }
 
-void ID3v2::Tag::setYear(uint i)
+void ID3v2::Tag::setYear(TagLib::uint i)
 {
   if(i <= 0) {
     removeFrames("TDRC");
@@ -431,7 +431,7 @@ void ID3v2::Tag::setYear(uint i)
   setTextFrame("TDRC", String::number(i));
 }
 
-void ID3v2::Tag::setTrack(uint i)
+void ID3v2::Tag::setTrack(TagLib::uint i)
 {
   if(i <= 0 && totalTracks() <= 0) {
     removeFrames("TRCK");
@@ -461,7 +461,7 @@ ID3v2::Tag::setComposer(const String &s)
 }
 
 int 
-ID3v2::Tag::setTotalTracks(uint i)
+ID3v2::Tag::setTotalTracks(TagLib::uint i)
 {
 	if(i <= 0 && track() <= 0) {
 		removeFrames("TRCK");
@@ -472,7 +472,7 @@ ID3v2::Tag::setTotalTracks(uint i)
 }
 
 int 
-ID3v2::Tag::setCDNr(uint i){
+ID3v2::Tag::setCDNr(TagLib::uint i){
 	if(i <= 0 && totalCDs() <= 0) {
 		removeFrames("TPOS");
 		return 0;
@@ -482,7 +482,7 @@ ID3v2::Tag::setCDNr(uint i){
 }
 
 int 
-ID3v2::Tag::setTotalCDs(uint i)
+ID3v2::Tag::setTotalCDs(TagLib::uint i)
 {
 	if(i <= 0 && cdNr() <= 0) {
 		removeFrames("TPOS");
@@ -493,7 +493,7 @@ ID3v2::Tag::setTotalCDs(uint i)
 }
 
 int 
-ID3v2::Tag::setBPM(uint i)
+ID3v2::Tag::setBPM(TagLib::uint i)
 {
 	if(i <= 0) {
 		removeFrames("TBPM");
@@ -606,8 +606,8 @@ ByteVector ID3v2::Tag::render() const
 
   // Compute the amount of padding, and append that to tagData.
 
-  uint paddingSize = 0;
-  uint originalSize = d->header.tagSize();
+  TagLib::uint paddingSize = 0;
+  TagLib::uint originalSize = d->header.tagSize();
 
   if(tagData.size() < originalSize)
     paddingSize = originalSize - tagData.size();
@@ -651,8 +651,8 @@ void ID3v2::Tag::parse(const ByteVector &origData)
   if(d->header.unsynchronisation() && d->header.majorVersion() <= 3)
     data = SynchData::decode(data);
 
-  uint frameDataPosition = 0;
-  uint frameDataLength = data.size();
+  TagLib::uint frameDataPosition = 0;
+  TagLib::uint frameDataLength = data.size();
 
   // check for extended header
 

@@ -35,7 +35,7 @@ Note: the 1.6.3 source tree in this repo is already patched, like so:
   $ patch -p1 < patch-161-04-comment-fix.patch
   $ patch -p1 < patch-161-06-id3v1-converter.patch
   $ patch -p1 < patch-161-07-reading-currupt-wav.patch
-
+  $ patch -p3 < patch-161-08-fix-compile-issues-when-uint-already-defined-by-system.patch
 
 === Compile TagLib:
 

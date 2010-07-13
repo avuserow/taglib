@@ -108,22 +108,22 @@ int  Tag::setComposer(const String &s)
 	return -1;
 }
 
-int Tag::setTotalTracks(uint i)
+int Tag::setTotalTracks(TagLib::uint i)
 {
 	return -1;
 }
 
-int  Tag::setCDNr(uint i)
+int  Tag::setCDNr(TagLib::uint i)
 {
 	return -1;
 }
 
-int  Tag::setTotalCDs(uint i)
+int  Tag::setTotalCDs(TagLib::uint i)
 {
 	return -1;
 }
 
-int  Tag::setBPM(uint i)
+int  Tag::setBPM(TagLib::uint i)
 {
 	return -1;
 }
@@ -155,22 +155,22 @@ String Tag::composer() const
 	return String::null;
 }
 
-uint Tag::totalTracks() const
+TagLib::uint Tag::totalTracks() const
 {
 	return 0;
 }
 
-uint Tag::cdNr() const
+TagLib::uint Tag::cdNr() const
 {
 	return 0;
 }
 
-uint Tag::totalCDs() const
+TagLib::uint Tag::totalCDs() const
 {
 	return 0;
 }
 
-uint Tag::bpm() const
+TagLib::uint Tag::bpm() const
 {
 	return 0;
 }

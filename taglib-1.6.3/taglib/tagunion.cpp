@@ -159,22 +159,22 @@ TagUnion::composer() const
 	stringUnion(composer);
 }
 
-uint TagUnion::totalTracks() const
+TagLib::uint TagUnion::totalTracks() const
 {
 	numberUnion(totalTracks);
 }
 
-uint TagUnion::cdNr() const
+TagLib::uint TagUnion::cdNr() const
 {
 	numberUnion(cdNr);
 }
 
-uint TagUnion::totalCDs() const
+TagLib::uint TagUnion::totalCDs() const
 {
 	numberUnion(totalCDs);
 }
 
-uint 
+TagLib::uint 
 TagUnion::bpm() const
 {
 	numberUnion(bpm);
@@ -215,12 +215,12 @@ int TagUnion::setLyrics(const String &s)
   return 1;
 }
 
-void TagUnion::setYear(uint i)
+void TagUnion::setYear(TagLib::uint i)
 {
   setUnion(Year, i);
 }
 
-void TagUnion::setTrack(uint i)
+void TagUnion::setTrack(TagLib::uint i)
 {
   setUnion(Track, i);
 }
@@ -243,25 +243,25 @@ int  TagUnion::setComposer(const String &s)
 	return 1;
 }
 
-int  TagUnion::setTotalTracks(uint i)
+int  TagUnion::setTotalTracks(TagLib::uint i)
 {
 	setUnion(TotalTracks, i);
 	return 1;
 }
 
-int  TagUnion::setCDNr(uint i)
+int  TagUnion::setCDNr(TagLib::uint i)
 {
 	setUnion(CDNr, i);
 	return 1;
 }
 
-int  TagUnion::setTotalCDs(uint i)
+int  TagUnion::setTotalCDs(TagLib::uint i)
 {
 	setUnion(TotalCDs, i);
 	return 1;
 }
 
-int  TagUnion::setBPM(uint i)
+int  TagUnion::setBPM(TagLib::uint i)
 {
 	setUnion(BPM, i);
 	return 1;
