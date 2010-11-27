@@ -629,28 +629,28 @@ MP4::Tag::composer() const
 		return d->items["\251wrt"].toStringList().toString(", ");
 	return String::null;
 }
-uint  
+TagLib::uint  
 MP4::Tag::totalTracks() const
 {
 	if(d->items.contains("trkn"))
 		return d->items["trkn"].toIntPair().second;
 	return 0;
 }
-uint  
+TagLib::uint  
 MP4::Tag::cdNr() const
 {
 	if(d->items.contains("disk"))
 		return d->items["disk"].toIntPair().first;
 	return 0;
 }
-uint  
+TagLib::uint  
 MP4::Tag::totalCDs() const
 {
 	if(d->items.contains("disk"))
 		return d->items["disk"].toIntPair().second;
 	return 0;	
 }
-uint  
+TagLib::uint  
 MP4::Tag::bpm() const
 {
 	if(d->items.contains("tmpo"))
