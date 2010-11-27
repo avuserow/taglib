@@ -31,6 +31,7 @@
 
 #include <tdebug.h>
 #include <tstring.h>
+#include <string.h>
 #include "mp4atom.h"
 #include "mp4tag.h"
 #include "id3v1genres.h"
