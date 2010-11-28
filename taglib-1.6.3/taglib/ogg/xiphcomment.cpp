@@ -126,6 +126,15 @@ TagLib::uint Ogg::XiphComment::cdNr() const
   return 0;
 }
 
+String Ogg::XiphComment::albumArtist() const
+{
+  if(!d->fieldListMap["ALBUMARTIST"].isEmpty())
+    return d->fieldListMap["ALBUMARTIST"].front();
+//  if(!d->fieldListMap["ALBUM ARTIST"].isEmpty())
+//    return d->fieldListMap["ALBUM ARTIST"].front();
+  return String::null;
+}
+
 void Ogg::XiphComment::setTitle(const String &s)
 {
   addField("TITLE", s);
@@ -177,6 +186,12 @@ int Ogg::XiphComment::setCDNr(uint i)
     addField("DISCNUMBER", String::number(i));
 
   return 0;
+}
+
+int Ogg::XiphComment::setAlbumArtist(const String &s)
+{
+  removeField("ALBUM ARTIST");
+  addField("ALBUMARTIST", s);
 }
 
 bool Ogg::XiphComment::isEmpty() const

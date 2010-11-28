@@ -87,6 +87,7 @@ namespace TagLib {
       virtual uint year() const;
       virtual uint track() const;
       virtual uint cdNr() const;
+      virtual String albumArtist() const;
 
       virtual void setTitle(const String &s);
       virtual void setArtist(const String &s);
@@ -96,6 +97,7 @@ namespace TagLib {
       virtual void setYear(uint i);
       virtual void setTrack(uint i);
       virtual int setCDNr(uint i);
+      virtual int setAlbumArtist(const String &s);
 
       virtual bool isEmpty() const;
 
