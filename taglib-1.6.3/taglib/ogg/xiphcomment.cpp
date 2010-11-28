@@ -119,6 +119,13 @@ TagLib::uint Ogg::XiphComment::track() const
   return 0;
 }
 
+TagLib::uint Ogg::XiphComment::cdNr() const
+{
+  if(!d->fieldListMap["DISCNUMBER"].isEmpty())
+    return d->fieldListMap["DISCNUMBER"].front().toInt();
+  return 0;
+}
+
 void Ogg::XiphComment::setTitle(const String &s)
 {
   addField("TITLE", s);
@@ -160,6 +167,16 @@ void Ogg::XiphComment::setTrack(uint i)
     removeField("TRACKNUMBER");
   else
     addField("TRACKNUMBER", String::number(i));
+}
+
+int Ogg::XiphComment::setCDNr(uint i)
+{
+  if(i == 0)
+    removeField("DISCNUMBER");
+  else
+    addField("DISCNUMBER", String::number(i));
+
+  return 0;
 }
 
 bool Ogg::XiphComment::isEmpty() const
